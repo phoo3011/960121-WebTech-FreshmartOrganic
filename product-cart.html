@@ -70,60 +70,20 @@
 								<div class="block-cart dropdown">
 									<div class="cart-title">
 										<i class="fa fa-shopping-basket"></i>
-										<span class="cart-count">2</span>
+												<span class="cart-count">0</span>
 									</div>
 									
 									<div class="dropdown-content">
 										<div class="cart-content">
 											<table>
-												<tbody>
-													<tr>
-														<td class="product-image">
-															<a href="product-detail-left-sidebar.html">
-																<img src="img/product/7.jpg" alt="Product">
-															</a>
-														</td>
-														<td>
-															<div class="product-name">
-																<a href="product-detail-left-sidebar.html">Organic Strawberry Fruits</a>
-															</div>
-															<div>	
-																2 x <span class="product-price">$28.98</span>
-															</div>
-														</td>
-														<td class="action">
-															<a class="remove" href="#">
-																<i class="fa fa-trash-o" aria-hidden="true"></i>
-															</a>
-														</td>
-													</tr>
-													
-													<tr>
-														<td class="product-image">
-															<a href="product-detail-left-sidebar.html">
-																<img src="img/product/6.jpg" alt="Product">
-															</a>
-														</td>
-														<td>
-															<div class="product-name">
-																<a href="product-detail-left-sidebar.html">Organic Strawberry</a>
-															</div>
-															<div>	
-																1 x <span class="product-price">$35.00</span>
-															</div>
-														</td>
-														<td class="action">
-															<a class="remove" href="#">
-																<i class="fa fa-trash-o" aria-hidden="true"></i>
-															</a>
-														</td>
-													</tr>
-													
+												<tbody id="cart-dropdown-items">
+													<!-- Cart items injected here by js/cart.js -->
+												</tbody>
+												<tfoot>
 													<tr class="total">
 														<td>Total:</td>
-														<td colspan="2">$92.96</td>
+														<td colspan="2" id="cart-dropdown-total">$0.00</td>
 													</tr>
-													
 													<tr>
 														<td colspan="3">
 															<div class="cart-button">
@@ -132,7 +92,7 @@
 															</div>
 														</td>
 													</tr>
-												</tbody>
+												</tfoot>
 											</table>
 										</div>
 									</div>
@@ -268,76 +228,8 @@
 								</thead>
 								
 								<tbody>
-									<tr>
-										<td class="product-remove">
-											<a title="Remove this item" class="remove" href="#">
-												<i class="fa fa-times"></i>
-											</a>
-										</td>
-										<td>
-											<a href="product-detail-left-sidebar.html">
-												<img width="80" alt="Product Image" class="img-responsive" src="img/product/19.jpg">
-											</a>
-										</td>
-										<td>
-											<a href="product-detail-left-sidebar.html" class="product-name">Organic Strawberry Fruits</a>
-										</td>
-										<td class="text-center">
-											$265
-										</td>
-										<td>
-											<div class="product-quantity">
-												<div class="qty">
-													<div class="input-group">
-														<input type="text" name="qty" value="1" data-min="1">
-														<span class="adjust-qty">
-															<span class="adjust-btn plus">+</span>
-															<span class="adjust-btn minus">-</span>
-														</span>
-													</div>
-												</div>
-											</div>
-										</td>
-										<td class="text-center">
-											$265
-										</td>
-									</tr>
-									
-									<tr>
-										<td class="product-remove">
-											<a title="Remove this item" class="remove" href="#">
-												<i class="fa fa-times"></i>
-											</a>
-										</td>
-										<td>
-											<a href="product-detail-left-sidebar.html">
-												<img width="80" alt="Product Image" class="img-responsive" src="img/product/31.jpg">
-											</a>
-										</td>
-										<td>
-											<a href="product-detail-left-sidebar.html" class="product-name">Organic Strawberry Fruits</a>
-										</td>
-										<td class="text-center">
-											$150
-										</td>
-										<td>
-											<div class="product-quantity">
-												<div class="qty">
-													<div class="input-group">
-														<input type="text" name="qty" value="2" data-min="1">
-														<span class="adjust-qty">
-															<span class="adjust-btn plus">+</span>
-															<span class="adjust-btn minus">-</span>
-														</span>
-													</div>
-												</div>
-											</div>
-										</td>
-										<td class="text-center">
-											$300
-										</td>
-									</tr>
-								</tbody>
+								<!-- Cart items will be rendered here by js/cart.js -->
+							</tbody>
 								
 								<tfoot>
 									<tr class="cart-total">
@@ -589,8 +481,9 @@
 		<script src="libs/slider-range/js/jquery.slider.js"></script>
 		<script src="libs/elevatezoom/jquery.elevatezoom.js"></script>
 		
-		<!-- Template CSS -->
+		<!-- Template Scripts -->
 		<script src="js/main.js"></script>
+		<script src="js/cart.js"></script>
 	</body>
 
 

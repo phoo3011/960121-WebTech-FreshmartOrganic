@@ -23,6 +23,10 @@ async function fetchProductData(path) {
         const productList = await response.json();
         window._allProducts = productList;
         renderUI(productList);
+        // If cart helpers are available, render the header dropdown to reflect product load
+        if (typeof renderCartDropdown === 'function') {
+            try { renderCartDropdown(); } catch (e) { /* ignore */ }
+        }
     } catch (error) {
         console.error('Data Flow Interrupted:', error);
         handleError(error);
@@ -77,7 +81,7 @@ function buildGridCard(item) {
                     <span class="base-price">$${basePrice}</span>
                 </div>
                 <div class="product-buttons">
-                    <a class="add-to-cart" href="#"><i class="fa fa-shopping-basket" aria-hidden="true"></i></a>
+                    <a class="add-to-cart" data-id="${item.id}" href="#"><i class="fa fa-shopping-basket" aria-hidden="true"></i></a>
                     <a class="add-wishlist" href="#"><i class="fa fa-heart" aria-hidden="true"></i></a>
                     <a class="quickview" href="#"><i class="fa fa-eye" aria-hidden="true"></i></a>
                 </div>
@@ -125,7 +129,7 @@ function buildListCard(item) {
                             ${item.category || 'Organic product'} from the FreshMart catalog.
                         </div>
                         <div class="product-buttons">
-                            <a class="add-to-cart" href="#"><i class="fa fa-shopping-basket" aria-hidden="true"></i><span>Add To Cart</span></a>
+                            <a class="add-to-cart" data-id="${item.id}" href="#"><i class="fa fa-shopping-basket" aria-hidden="true"></i><span>Add To Cart</span></a>
                             <a class="add-wishlist" href="#"><i class="fa fa-heart" aria-hidden="true"></i></a>
                             <a class="quickview" href="#"><i class="fa fa-eye" aria-hidden="true"></i></a>
                         </div>
