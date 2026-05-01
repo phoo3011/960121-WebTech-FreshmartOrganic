@@ -21,6 +21,7 @@ async function fetchProductData(path) {
         }
 
         const productList = await response.json();
+        window._allProducts = productList;
         renderUI(productList);
     } catch (error) {
         console.error('Data Flow Interrupted:', error);
@@ -143,6 +144,40 @@ function updateProductCount(count) {
     }
 }
 
+/**
+ * Filters an array of products based on a search term and an optional category.
+ * Backwards-compatible: if only a search term is provided, it behaves like before.
+ *
+ * @param {string} searchTerm - The text to search for in the product name.
+ * @param {string} [category] - The category to filter by (or 'All' / undefined for no category filter).
+ */
+function filterProducts(searchTerm, category) {
+    const all = Array.isArray(window._allProducts) ? window._allProducts : [];
+
+    const normalizedSearchTerm = (searchTerm || '').toString().toLowerCase().trim();
+    const normalizedCategory = (category || 'All').toString().toLowerCase().trim();
+
+    // If no search term and category is 'all', render everything
+    if (!normalizedSearchTerm && normalizedCategory === 'all') {
+        renderUI(all);
+        return;
+    }
+
+    const filtered = all.filter((product) => {
+        // Category match: pass when category is 'all' or when product category matches exactly (case-insensitive)
+        const productCategory = (product.category || '').toString().toLowerCase().trim();
+        const matchesCategory = normalizedCategory === 'all' || productCategory === normalizedCategory;
+
+        // Search term match: if empty search term, match everything for the name check
+        const productName = (product.name || '').toString().toLowerCase();
+        const matchesSearch = !normalizedSearchTerm || productName.includes(normalizedSearchTerm);
+
+        return matchesCategory && matchesSearch;
+    });
+
+    renderUI(filtered);
+}
+
 function getRenderTargets() {
     return [
         document.querySelector('#product-container'),
@@ -178,22 +213,15 @@ function cleanupLegacyProducts() {
                 </div>
                 <div class="col-md-6 col-xs-6">
                     <div class="filter-bar">
-                        <form action="#" class="pull-right">
+                        <form action="#" class="pull-right search-form">
                             <div class="select">
-                                <select class="form-control" aria-label="Sort By">
-                                    <option value="">Sort By</option>
-                                    <option value="1">Price: Lowest first</option>
-                                    <option value="2">Price: Highest first</option>
-                                    <option value="3">Product Name: A to Z</option>
-                                    <option value="4">Product Name: Z to A</option>
-                                    <option value="5">In stock</option>
-                                </select>
+                                <input id="product-search-input" class="form-control" type="search" placeholder="Search products..." aria-label="Search products">
                             </div>
                         </form>
                         <form action="#" class="pull-right">
                             <div class="select">
-                                <select class="form-control" aria-label="Relevance">
-                                    <option value="">Relevance</option>
+                                <select class="form-control" aria-label="Sort By">
+                                    <option value="">Sort By</option>
                                     <option value="1">Price: Lowest first</option>
                                     <option value="2">Price: Highest first</option>
                                     <option value="3">Product Name: A to Z</option>
@@ -219,6 +247,20 @@ function cleanupLegacyProducts() {
             </div>
         </div>
     `;
+
+    const searchInputEl = productCategoryPage.querySelector('#product-search-input');
+
+    if (searchInputEl) {
+        searchInputEl.addEventListener('input', (e) => {
+            filterProducts(e.target.value);
+        });
+
+        searchInputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+            }
+        });
+    }
 
     const leftColumn = document.querySelector('#left-column');
     const row = centerColumn.parentElement;
