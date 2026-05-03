@@ -1,3 +1,15 @@
+// ============================================================================
+// LOGIC FLOW:
+// 1. Trigger  : User clicks category OR page loads
+// 2. Request  : Browser sends GET /api/products?category=xxx
+// 3. Processing: Express server filters (Gatekeeper pattern)
+// 4. Response : Server returns { success, data, count }
+// 5. Render   : renderUI(data) injects product cards into the DOM
+// ============================================================================
+
+// Track the current category filter state
+window._currentCategory = null;
+
 function requestProducts() {
     cleanupLegacyProducts();
     removeDuplicatePaginationBars();
@@ -8,29 +20,82 @@ function requestProducts() {
         return;
     }
 
-    console.log('Initiating product request...');
-    fetchProductData('data/products.json');
+    console.log('Initiating product request from REST API...');
+    // Fetch from REST API instead of static JSON file
+    fetchProductData();
+    // Attach category filter event listeners to sidebar links
+    attachCategoryFilterListeners();
 }
 
-async function fetchProductData(path) {
+/**
+ * Fetches product data from the REST API endpoint.
+ * Replaces the previous static JSON fetch with dynamic API calls.
+ * 
+ * @param {string} [category] - Optional category filter parameter
+ */
+async function fetchProductData(category = null) {
     try {
-        const response = await fetch(path);
+        // Build the API endpoint URL with optional category parameter
+        const apiEndpoint = 'http://localhost:5000/api/products';
+        const url = category 
+            ? `${apiEndpoint}?category=${encodeURIComponent(category)}`
+            : apiEndpoint;
+
+        console.log(`Fetching products from: ${url}`);
+        const response = await fetch(url);
 
         if (!response.ok) {
-            throw new Error(`Failed to reach data source. Status: ${response.status}`);
+            throw new Error(`REST API Error. Status: ${response.status}`);
         }
 
-        const productList = await response.json();
+        const apiResponse = await response.json();
+
+        // API Response Format (Gatekeeper pattern):
+        // { success: true, data: [...products], count: N }
+        if (!apiResponse.success) {
+            throw new Error(apiResponse.message || 'API returned unsuccessful response');
+        }
+
+        // Extract product data from response.data field
+        const productList = apiResponse.data || [];
         window._allProducts = productList;
+        window._currentCategory = category;
+
+        console.log(`Successfully loaded ${productList.length} products`);
         renderUI(productList);
+
         // If cart helpers are available, render the header dropdown to reflect product load
         if (typeof renderCartDropdown === 'function') {
             try { renderCartDropdown(); } catch (e) { /* ignore */ }
         }
     } catch (error) {
-        console.error('Data Flow Interrupted:', error);
+        console.error('REST API Data Flow Interrupted:', error);
         handleError(error);
     }
+}
+
+/**
+ * Attaches event listeners to category filter links in the sidebar.
+ * When a user clicks a category, it prevents default navigation and
+ * instead calls the API with the selected category filter.
+ */
+function attachCategoryFilterListeners() {
+    const categoryLinks = document.querySelectorAll('.category-title');
+
+    categoryLinks.forEach((link) => {
+        link.addEventListener('click', (e) => {
+            // Prevent page reload (Gatekeeper pattern - stop default behavior)
+            e.preventDefault();
+
+            // Extract category name from link text
+            const categoryName = link.textContent.trim();
+            
+            console.log(`Category filter clicked: ${categoryName}`);
+
+            // Fetch products filtered by this category
+            fetchProductData(categoryName);
+        });
+    });
 }
 
 function renderUI(data) {
@@ -296,14 +361,43 @@ function removeDuplicatePaginationBars() {
     });
 }
 
+/**
+ * Handles API errors by displaying a user-friendly message.
+ * Shows error in #product-grid-container for visibility.
+ * 
+ * @param {Error} err - The error object from fetch or processing
+ */
 function handleError(err) {
-    const container = document.querySelector('#product-container');
+    // Try to display error in product grid container (primary target)
+    const gridContainer = document.querySelector('#product-grid-container');
+    const legacyContainer = document.querySelector('#product-container');
+    const targetContainer = gridContainer || legacyContainer;
 
-    if (!container) {
+    if (!targetContainer) {
+        console.error('No container found for error display');
         return;
     }
 
-    container.innerHTML = `<p class="error">Error loading organic products: ${err.message}</p>`;
+    // Provide user-friendly error message
+    let userMessage = 'Unable to load organic products at this time.';
+    
+    if (err.message.includes('Failed to fetch')) {
+        userMessage = 'Connection error: Unable to reach the product server. Please check your internet connection.';
+    } else if (err.message.includes('500')) {
+        userMessage = 'Server error (500): The product service encountered an issue. Please try again later.';
+    } else if (err.message.includes('404')) {
+        userMessage = 'Server error (404): Product service not found. Please contact support.';
+    }
+
+    targetContainer.innerHTML = `
+        <div style="padding: 20px; text-align: center; color: #d32f2f; background-color: #ffebee; border-radius: 4px; margin: 20px;">
+            <p><strong>⚠️ Error Loading Products</strong></p>
+            <p>${userMessage}</p>
+            <p style="font-size: 12px; color: #999; margin-top: 10px;">Technical details: ${err.message}</p>
+        </div>
+    `;
+
+    console.error('Product Loading Error:', err);
 }
 
 document.addEventListener('DOMContentLoaded', requestProducts);
