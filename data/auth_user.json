@@ -1,0 +1,62 @@
+[
+  {
+    "firstName": "Alice",
+    "username": "alice@example.com",
+    "passwordHash": "32250170a0dca92d53ec9624f336ca24",
+    "registrationDate": "2024-01-15T09:22:14Z"
+  },
+  {
+    "firstName": "Bob",
+    "username": "bob@testnet.org",
+    "passwordHash": "d8578edf8458ce06fbc5bb76a58c5ca4",
+    "registrationDate": "2024-02-03T14:45:00Z"
+  },
+  {
+    "firstName": "Charlie",
+    "username": "charlie@demo.com",
+    "passwordHash": "528574fb21d0179ddb2f5b5b481971bd",
+    "registrationDate": "2024-02-18T10:15:33Z"
+  },
+  {
+    "firstName": "Diana",
+    "username": "diana@sandbox.net",
+    "passwordHash": "11ad264f33ceef1dcffb04f3238da06b",
+    "registrationDate": "2024-03-05T18:05:22Z"
+  },
+  {
+    "firstName": "Evan",
+    "username": "evan@mockdata.io",
+    "passwordHash": "07d6a74c43ba4e41253d848721245041",
+    "registrationDate": "2024-03-22T07:50:10Z"
+  },
+  {
+    "firstName": "Fiona",
+    "username": "fiona@devlocal.com",
+    "passwordHash": "9af15b336e6a9619928537df30b2e6a2",
+    "registrationDate": "2024-04-10T22:30:45Z"
+  },
+  {
+    "firstName": "George",
+    "username": "george@testing.org",
+    "passwordHash": "179ad45c6ce2cb97bc1ce2395e058635",
+    "registrationDate": "2024-05-01T11:11:11Z"
+  },
+  {
+    "firstName": "Hannah",
+    "username": "hannah@sample.net",
+    "passwordHash": "e80b5017098950fc58aad83c8c14978e",
+    "registrationDate": "2024-05-14T16:20:05Z"
+  },
+  {
+    "firstName": "Ian",
+    "username": "ian@apptest.com",
+    "passwordHash": "482c811da5d5b4bc6d497ffa98491e38",
+    "registrationDate": "2024-06-02T09:00:00Z"
+  },
+  {
+    "firstName": "Julia",
+    "username": "julia@fakemail.io",
+    "passwordHash": "5f4dcc3b5aa765d61d8327deb882cf99",
+    "registrationDate": "2024-06-20T19:45:30Z"
+  }
+]

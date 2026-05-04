@@ -12,10 +12,14 @@ module.exports = {
   // File paths
   DATA_DIR: path.join(__dirname, '../../data'),
   PRODUCTS_FILE: path.join(__dirname, '../../data/products.json'),
+  AUTH_USERS_FILE: path.join(__dirname, '../../data/auth_user.json'),
 
   // CORS configuration
   CORS_ORIGIN: process.env.CORS_ORIGIN || 'http://localhost:3000',
 
   // API configuration
   API_PREFIX: '/api',
+
+  // Authentication
+  JWT_SECRET: process.env.JWT_SECRET || 'freshmart-dev-secret',
 };

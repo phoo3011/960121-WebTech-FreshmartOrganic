@@ -6,6 +6,7 @@
 const express = require('express');
 const path = require('path');
 const config = require('./config/config');
+const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -52,6 +53,9 @@ app.get('/api/health', (req, res) => {
 
 // Product API routes
 app.use(`${config.API_PREFIX}/products`, productRoutes);
+
+// Authentication API routes
+app.use(config.API_PREFIX, authRoutes);
 
 // ==================== 404 HANDLER ====================
 
