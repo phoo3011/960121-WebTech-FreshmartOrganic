@@ -3,6 +3,7 @@
  * Handles user lookup, password verification, and token creation.
  */
 
+const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const fs = require('fs');
 const config = require('../config/config');
@@ -19,7 +20,16 @@ class AuthService {
     return users.find((user) => String(user.username).trim().toLowerCase() === normalizedEmail) || null;
   }
 
-  static verifyPassword(password, passwordHash) {
+  static async verifyPassword(password, passwordHash) {
+    if (!passwordHash) {
+      return false;
+    }
+
+    // Preserve backward compatibility for the legacy MD5 dataset while using bcrypt for new registrations.
+    if (String(passwordHash).startsWith('$2')) {
+      return bcrypt.compare(String(password), passwordHash);
+    }
+
     const submittedHash = crypto.createHash('md5').update(String(password)).digest('hex');
     return submittedHash === passwordHash;
   }

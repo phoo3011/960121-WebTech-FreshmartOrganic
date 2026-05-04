@@ -472,6 +472,175 @@
 		<script src="libs/slider-range/js/jquery.slider.js"></script>
 		<script src="libs/elevatezoom/jquery.elevatezoom.js"></script>
 		
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				// Select the registration form and its fields using the existing markup.
+				var form = document.querySelector('.register-form form');
+				if (!form) {
+					return;
+				}
+
+				var firstNameInput = form.querySelector('input[name="first_name"]');
+				var emailInput = form.querySelector('input[name="email"]');
+				var passwordInput = form.querySelector('input[name="password"]');
+				var submitButton = form.querySelector('input[type="submit"]');
+
+				// Build a reusable alert area so the user sees success and error feedback without reloading.
+				var alertBox = document.createElement('div');
+				alertBox.id = 'register-alert';
+				alertBox.style.display = 'none';
+				form.parentNode.insertBefore(alertBox, form);
+
+				// Add the live password checklist right under the password field.
+				var passwordGroup = passwordInput ? passwordInput.closest('.form-group') : null;
+				var checklist = document.createElement('div');
+				checklist.id = 'password-checklist';
+				checklist.className = 'help-block';
+				checklist.innerHTML = '<strong>Password requirements</strong>' +
+					'<ul class="list-unstyled" style="margin-top: 10px; margin-bottom: 0;">' +
+						'<li data-rule="length" class="text-danger"><i class="fa fa-times" aria-hidden="true"></i> 8+ characters</li>' +
+						'<li data-rule="uppercase" class="text-danger"><i class="fa fa-times" aria-hidden="true"></i> At least one uppercase letter</li>' +
+						'<li data-rule="special" class="text-danger"><i class="fa fa-times" aria-hidden="true"></i> At least one special character (!@#$%^&*)</li>' +
+					'</ul>';
+
+				if (passwordGroup) {
+					passwordGroup.appendChild(checklist);
+				}
+
+				var ruleMap = {
+					length: {
+						label: '8+ characters',
+						check: function (value) { return value.length >= 8; }
+					},
+					uppercase: {
+						label: 'At least one uppercase letter',
+						check: function (value) { return /[A-Z]/.test(value); }
+					},
+					special: {
+						label: 'At least one special character (!@#$%^&*)',
+						check: function (value) { return /[!@#$%^&*]/.test(value); }
+					}
+				};
+
+				function showAlert(type, message) {
+					// Keep Bootstrap styling so the feedback matches the existing page theme.
+					alertBox.className = 'alert alert-' + type;
+					alertBox.textContent = message;
+					alertBox.style.display = 'block';
+				}
+
+				function getPasswordState(value) {
+					return {
+						length: ruleMap.length.check(value),
+						uppercase: ruleMap.uppercase.check(value),
+						special: ruleMap.special.check(value)
+					};
+				}
+
+				function renderPasswordChecklist() {
+					if (!passwordInput) {
+						return;
+					}
+
+					var value = passwordInput.value || '';
+					var state = getPasswordState(value);
+
+					Object.keys(state).forEach(function (key) {
+						var item = checklist.querySelector('[data-rule="' + key + '"]');
+						if (!item) {
+							return;
+						}
+
+						var passed = state[key];
+						item.classList.remove('text-success', 'text-danger');
+						item.classList.add(passed ? 'text-success' : 'text-danger');
+						item.innerHTML = '<i class="fa ' + (passed ? 'fa-check' : 'fa-times') + '" aria-hidden="true"></i> ' + ruleMap[key].label;
+					});
+				}
+
+				function isEmailValid(email) {
+					return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email).trim());
+				}
+
+				function isPasswordValid(value) {
+					return value.length >= 8 && /[A-Z]/.test(value) && /[!@#$%^&*]/.test(value);
+				}
+
+				function setSubmitState(isPending) {
+					if (!submitButton) {
+						return;
+					}
+
+					submitButton.disabled = isPending;
+					submitButton.value = isPending ? 'Creating Account...' : 'Create Account';
+				}
+
+				if (passwordInput) {
+					passwordInput.addEventListener('input', renderPasswordChecklist);
+					renderPasswordChecklist();
+				}
+
+				form.addEventListener('submit', async function (event) {
+					event.preventDefault();
+
+					// Read and trim values on submit so the server receives clean input.
+					var firstName = firstNameInput ? firstNameInput.value.trim() : '';
+					var email = emailInput ? emailInput.value.trim() : '';
+					var password = passwordInput ? passwordInput.value : '';
+
+					if (!firstName || !email || !password) {
+						showAlert('danger', 'All fields are required.');
+						return;
+					}
+
+					if (!isEmailValid(email)) {
+						showAlert('danger', 'Please enter a valid email address.');
+						return;
+					}
+
+					if (!isPasswordValid(password)) {
+						showAlert('danger', 'Password must be 8+ characters, contain one uppercase letter, and one special character.');
+						return;
+					}
+
+					setSubmitState(true);
+
+					try {
+						// Send only the fields the backend expects, and let the server enforce its own validation rules.
+						var response = await fetch('/api/auth/register', {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json'
+							},
+							body: JSON.stringify({
+								firstName: firstName,
+								email: email,
+								password: password
+							})
+						});
+
+						var data = await response.json().catch(function () {
+							return null;
+						});
+
+						if (!response.ok) {
+							throw new Error((data && (data.message || data.error)) || 'Registration failed.');
+						}
+
+						showAlert('success', (data && data.message) || 'Registration successful. Redirecting to login page...');
+
+						// Give the user a moment to read the success message before redirecting.
+						window.setTimeout(function () {
+							window.location.href = 'user-login.html';
+						}, 2000);
+					} catch (error) {
+						showAlert('danger', error.message || 'Registration failed.');
+						setSubmitState(false);
+					}
+				});
+			});
+		</script>
+		
 		<!-- Template Scripts -->
 		<script src="js/main.js"></script>
 		<script src="js/cart.js"></script>

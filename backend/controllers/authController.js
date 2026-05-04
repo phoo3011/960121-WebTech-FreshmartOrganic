@@ -22,7 +22,7 @@ class AuthController {
         return res.status(401).json({ error: 'Invalid credentials.' });
       }
 
-      const isPasswordValid = AuthService.verifyPassword(password, user.passwordHash);
+      const isPasswordValid = await AuthService.verifyPassword(password, user.passwordHash);
 
       if (!isPasswordValid) {
         return res.status(401).json({ error: 'Invalid credentials.' });
