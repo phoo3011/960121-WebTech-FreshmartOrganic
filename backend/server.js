@@ -8,6 +8,7 @@ const path = require('path');
 const config = require('./config/config');
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
+const checkoutRoutes = require('./routes/checkout');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -53,6 +54,9 @@ app.get('/api/health', (req, res) => {
 
 // Product API routes
 app.use(`${config.API_PREFIX}/products`, productRoutes);
+
+// Checkout API routes
+app.use(`${config.API_PREFIX}`, checkoutRoutes);
 
 // Authentication API routes
 app.use(config.API_PREFIX, authRoutes);

@@ -358,54 +358,14 @@
 												<table class="cart-summary table table-bordered">
 													<thead>
 														<tr>
-															<th class="width-80 text-center">Image</th>
-															<th>Name</th>
-															<th class="width-100 text-center">Unit price</th>
-															<th class="width-100 text-center">Qty</th>
+															<th>Product Name</th>
+															<th class="width-100 text-center">Unit Price</th>
+															<th class="width-100 text-center">Quantity</th>
 															<th class="width-100 text-center">Total</th>
 														</tr>
 													</thead>
-													
-													<tbody>
-														<tr>
-															<td>
-																<a href="product-detail-left-sidebar.html">
-																	<img width="80" alt="Product Image" class="img-responsive" src="img/product/19.jpg">
-																</a>
-															</td>
-															<td>
-																<a href="product-detail-left-sidebar.html" class="product-name">Organic Strawberry Fruits</a>
-															</td>
-															<td class="text-center">
-																$265
-															</td>
-															<td class="text-center">
-																1
-															</td>
-															<td class="text-center">
-																$265
-															</td>
-														</tr>
-														
-														<tr>
-															<td>
-																<a href="product-detail-left-sidebar.html">
-																	<img width="80" alt="Product Image" class="img-responsive" src="img/product/31.jpg">
-																</a>
-															</td>
-															<td>
-																<a href="product-detail-left-sidebar.html" class="product-name">Organic Strawberry Fruits</a>
-															</td>
-															<td class="text-center">
-																$150
-															</td>
-															<td class="text-center">
-																2
-															</td>
-															<td class="text-center">
-																$300
-															</td>
-														</tr>
+													<tbody id="checkout-cart-items">
+														<!-- Cart items will be loaded by checkout.js -->
 													</tbody>
 												</table>
 
@@ -413,48 +373,36 @@
 												<table class="table cart-total">
 													<tbody>
 														<tr>
-															<th>
-																Cart Subtotal
-															</th>
-															<td class="total">
-																$431
-															</td>
-														</tr>
-														<tr>
-															<th>
-																Shipping
-															</th>
-															<td>
-																Free Shipping
-															</td>
-														</tr>
-														<tr>
-															<th>
-																<strong>Order Total</strong>
-															</th>
-															<td class="total">
-																$431
-															</td>
+															<th><strong>Order Total</strong></th>
+															<td class="total"><strong id="checkout-total">$0.00</strong></td>
 														</tr>
 													</tbody>
 												</table>
 
-												<h4 class="heading-primary">Payment</h4>
-												<form action="#" method="post">
-													<div class="item">
-														<input type="checkbox">Pay by bank wire (order processing will be longer)
+												<h4 class="heading-primary">Checkout Information</h4>
+												<form id="checkout-form" method="post" class="form-horizontal">
+													<div class="form-group">
+														<div class="col-md-12">
+															<label for="checkout-email">Email Address *</label>
+															<input type="email" id="checkout-email" name="email" placeholder="your@email.com" class="form-control" required>
+														</div>
 													</div>
-													<div class="item">
-														<input type="checkbox">Pay by check (order processing will be longer)
+													<div class="form-group">
+														<div class="col-md-12">
+															<label for="checkout-cc">Credit Card Number *</label>
+															<input type="text" id="checkout-cc" name="creditCard" placeholder="1234 5678 9012 3456" class="form-control" maxlength="19" required>
+															<small style="color: #999;">Enter 16 digits</small>
+														</div>
+													</div>
+													<div class="form-group">
+														<div class="col-md-12">
+															<button type="submit" class="btn btn-primary" style="width: 100%;">Complete Checkout</button>
+														</div>
 													</div>
 												</form>
 											</div>
 										</div>
 									</div>
-								</div>
-
-								<div class="pull-right">
-									<input type="submit" value="Place Order" name="proceed" class="btn btn-primary">
 								</div>
 							</div>
 							
@@ -462,32 +410,19 @@
 								<h4 class="title">Cart Total</h4>
 								<table class="table cart-total">
 									<tbody>
-										<tr class="cart-subtotal">
-											<th>
-												<strong>Cart Subtotal</strong>
-											</th>
-											<td>
-												<strong><span class="amount">$431</span></strong>
-											</td>
-										</tr>
-										<tr class="shipping">
-											<th>
-												Shipping
-											</th>
-											<td>
-												Free Shipping<input type="hidden" value="free_shipping" class="shipping-method" name="shipping_method">
-											</td>
-										</tr>
 										<tr class="total">
 											<th>
 												<strong>Order Total</strong>
 											</th>
 											<td>
-												<strong><span class="amount">$431</span></strong>
+												<strong><span id="checkout-sidebar-total">$0.00</span></strong>
 											</td>
 										</tr>
 									</tbody>
 								</table>
+								<p style="font-size: 12px; color: #999; margin-top: 15px;">
+									<i class="fa fa-info-circle"></i> Fill in all required fields to complete your order.
+								</p>
 							</div>
 						</div>
 					</div>
@@ -719,6 +654,7 @@
 		<!-- Template Scripts -->
 		<script src="js/main.js"></script>
 		<script src="js/cart.js"></script>
+		<script src="js/checkout.js"></script>
 	</body>
 
 
