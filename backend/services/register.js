@@ -19,8 +19,7 @@
  */
 
 const bcrypt = require('bcrypt');
-const fs = require('fs');
-const config = require('../config/config');
+const { all, dbReady, get, run } = require('../config/database');
 
 class RegisterService {
   /**
@@ -28,10 +27,8 @@ class RegisterService {
    * @returns {Promise<Array<Object>>} Existing users.
    */
   static async getUsers() {
-    const fileContents = await fs.promises.readFile(config.AUTH_USERS_FILE, 'utf-8');
-    const users = JSON.parse(fileContents);
-
-    return Array.isArray(users) ? users : [];
+    await dbReady;
+    return all('SELECT id, first_name AS firstName, username, password_hash AS passwordHash, registration_date AS registrationDate FROM users ORDER BY id ASC');
   }
 
   /**
@@ -95,26 +92,15 @@ class RegisterService {
    * @returns {number} Next user ID.
    */
   static getNextUserId(users) {
+    if (!Array.isArray(users) || users.length === 0) {
+      return 1;
+    }
+
     const numericIds = users
       .map((user) => Number(user.id))
       .filter((id) => Number.isInteger(id) && id > 0);
 
-    if (numericIds.length > 0) {
-      return Math.max(...numericIds) + 1;
-    }
-
-    // Legacy data in this project has no IDs yet, so use the collection length to preserve auto-increment behavior.
-    return users.length + 1;
-  }
-
-  /**
-   * Persist the updated user list back to the JSON file.
-   * @param {Array<Object>} users - Updated user collection.
-   * @returns {Promise<void>}
-   */
-  static async saveUsers(users) {
-    // Rewriting the full JSON array avoids partial record appends that could corrupt the file.
-    await fs.promises.writeFile(config.AUTH_USERS_FILE, `${JSON.stringify(users, null, 2)}\n`, 'utf-8');
+    return numericIds.length > 0 ? Math.max(...numericIds) + 1 : users.length + 1;
   }
 
   /**
@@ -146,8 +132,11 @@ class RegisterService {
       throw error;
     }
 
-    const users = await this.getUsers();
-    const existingUser = this.findUserByEmail(users, email);
+    await dbReady;
+    const existingUser = await get(
+      'SELECT id, first_name AS firstName, username, password_hash AS passwordHash, registration_date AS registrationDate FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1',
+      [email]
+    );
 
     if (existingUser) {
       const error = new Error('An account with this email already exists.');
@@ -158,16 +147,18 @@ class RegisterService {
     // Bcrypt is intentionally slow and salted to make password cracking materially harder if the file is exposed.
     const passwordHash = await bcrypt.hash(password, 10);
     const registrationDate = new Date().toISOString();
+    const insertResult = await run(
+      'INSERT INTO users (first_name, username, password_hash, registration_date) VALUES (?, ?, ?, ?)',
+      [firstName, email, passwordHash, registrationDate]
+    );
+
     const newUser = {
-      id: this.getNextUserId(users),
+      id: insertResult.lastID,
       firstName,
       username: email,
       passwordHash,
       registrationDate,
     };
-
-    users.push(newUser);
-    await this.saveUsers(users);
 
     return {
       success: true,

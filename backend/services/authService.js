@@ -5,19 +5,22 @@
 
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const fs = require('fs');
-const config = require('../config/config');
+const { all, dbReady, get } = require('../config/database');
 
 class AuthService {
   static async getUsers() {
-    const fileContents = await fs.promises.readFile(config.AUTH_USERS_FILE, 'utf-8');
-    return JSON.parse(fileContents);
+    await dbReady;
+    return all('SELECT id, first_name AS firstName, username, password_hash AS passwordHash, registration_date AS registrationDate FROM users ORDER BY id ASC');
   }
 
   static async findUserByEmail(email) {
     const normalizedEmail = String(email).trim().toLowerCase();
-    const users = await this.getUsers();
-    return users.find((user) => String(user.username).trim().toLowerCase() === normalizedEmail) || null;
+    await dbReady;
+
+    return get(
+      'SELECT id, first_name AS firstName, username, password_hash AS passwordHash, registration_date AS registrationDate FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1',
+      [normalizedEmail]
+    );
   }
 
   static async verifyPassword(password, passwordHash) {
