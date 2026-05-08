@@ -19,16 +19,15 @@
  */
 
 const bcrypt = require('bcrypt');
-const { all, dbReady, get, run } = require('../config/database');
+const UserRepository = require('../repositories/userRepository');
 
 class RegisterService {
   /**
-   * Load the current user array from the JSON store.
+   * Load the current user array from the database.
    * @returns {Promise<Array<Object>>} Existing users.
    */
   static async getUsers() {
-    await dbReady;
-    return all('SELECT id, first_name AS firstName, username, password_hash AS passwordHash, registration_date AS registrationDate FROM users ORDER BY id ASC');
+    return UserRepository.findAll();
   }
 
   /**
@@ -132,13 +131,9 @@ class RegisterService {
       throw error;
     }
 
-    await dbReady;
-    const existingUser = await get(
-      'SELECT id, first_name AS firstName, username, password_hash AS passwordHash, registration_date AS registrationDate FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1',
-      [email]
-    );
-
-    if (existingUser) {
+    // Delegate to repository to check if email exists
+    const emailExists = await UserRepository.emailExists(email);
+    if (emailExists) {
       const error = new Error('An account with this email already exists.');
       error.statusCode = 409;
       throw error;
@@ -147,18 +142,14 @@ class RegisterService {
     // Bcrypt is intentionally slow and salted to make password cracking materially harder if the file is exposed.
     const passwordHash = await bcrypt.hash(password, 10);
     const registrationDate = new Date().toISOString();
-    const insertResult = await run(
-      'INSERT INTO users (first_name, username, password_hash, registration_date) VALUES (?, ?, ?, ?)',
-      [firstName, email, passwordHash, registrationDate]
-    );
 
-    const newUser = {
-      id: insertResult.lastID,
+    // Delegate to repository to create the user
+    const newUser = await UserRepository.create({
       firstName,
-      username: email,
+      email,
       passwordHash,
       registrationDate,
-    };
+    });
 
     return {
       success: true,

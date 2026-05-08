@@ -1,26 +1,29 @@
 /**
  * Authentication Service
- * Handles user lookup, password verification, and token creation.
+ * Business Logic Layer: Handles user lookup, password verification, and token creation.
+ * Data access delegated to UserRepository
  */
 
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
-const { all, dbReady, get } = require('../config/database');
+const UserRepository = require('../repositories/userRepository');
 
 class AuthService {
+  /**
+   * Get all users (business logic wrapper)
+   * @returns {Promise<Array>} All users
+   */
   static async getUsers() {
-    await dbReady;
-    return all('SELECT id, first_name AS firstName, username, password_hash AS passwordHash, registration_date AS registrationDate FROM users ORDER BY id ASC');
+    return UserRepository.findAll();
   }
 
+  /**
+   * Find a user by email (business logic wrapper)
+   * @param {string} email - Email to find
+   * @returns {Promise<Object|null>} User object or null
+   */
   static async findUserByEmail(email) {
-    const normalizedEmail = String(email).trim().toLowerCase();
-    await dbReady;
-
-    return get(
-      'SELECT id, first_name AS firstName, username, password_hash AS passwordHash, registration_date AS registrationDate FROM users WHERE LOWER(username) = LOWER(?) LIMIT 1',
-      [normalizedEmail]
-    );
+    return UserRepository.findByEmail(email);
   }
 
   static async verifyPassword(password, passwordHash) {

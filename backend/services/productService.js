@@ -1,19 +1,19 @@
 /**
  * Product Service Layer
- * Handles business logic and data operations for products
+ * Business Logic: Handles product operations and data transformation
+ * Data access delegated to ProductRepository
  */
 
-const { all, dbReady, get } = require('../config/database');
+const ProductRepository = require('../repositories/productRepository');
 
 class ProductService {
   /**
-   * Load all products from SQLite.
+   * Load all products from the repository.
    * @returns {Promise<Array>} Array of product objects
    */
   static async getAllProducts() {
     try {
-      await dbReady;
-      const products = await all('SELECT id, name, category, price, image, status, discount FROM products ORDER BY id ASC');
+      const products = await ProductRepository.findAll();
       return products;
     } catch (error) {
       console.error('Error loading products:', error.message);
@@ -28,8 +28,7 @@ class ProductService {
    */
   static async getProductById(productId) {
     try {
-      await dbReady;
-      return await get('SELECT id, name, category, price, image, status, discount FROM products WHERE id = ?', [Number(productId)]);
+      return await ProductRepository.findById(productId);
     } catch (error) {
       console.error('Error fetching product by ID:', error.message);
       throw new Error('Failed to fetch product');
@@ -43,11 +42,7 @@ class ProductService {
    */
   static async getProductsByCategory(category) {
     try {
-      await dbReady;
-      return await all(
-        'SELECT id, name, category, price, image, status, discount FROM products WHERE LOWER(category) = LOWER(?) ORDER BY id ASC',
-        [category]
-      );
+      return await ProductRepository.findByCategory(category);
     } catch (error) {
       console.error('Error fetching products by category:', error.message);
       throw new Error('Failed to fetch products by category');
@@ -61,12 +56,7 @@ class ProductService {
    */
   static async searchProducts(searchTerm) {
     try {
-      await dbReady;
-      const term = `%${String(searchTerm).trim().toLowerCase()}%`;
-      return await all(
-        'SELECT id, name, category, price, image, status, discount FROM products WHERE LOWER(name) LIKE ? OR LOWER(category) LIKE ? ORDER BY id ASC',
-        [term, term]
-      );
+      return await ProductRepository.search(searchTerm);
     } catch (error) {
       console.error('Error searching products:', error.message);
       throw new Error('Failed to search products');
@@ -81,23 +71,33 @@ class ProductService {
    */
   static async getPaginatedProducts(page = 1, limit = 10) {
     try {
-      await dbReady;
       const safePage = Math.max(parseInt(page, 10) || 1, 1);
       const safeLimit = Math.max(parseInt(limit, 10) || 10, 1);
       const startIndex = (safePage - 1) * safeLimit;
 
-      const paginatedProducts = await all(
-        'SELECT id, name, category, price, image, status, discount FROM products ORDER BY id ASC LIMIT ? OFFSET ?',
-        [safeLimit, startIndex]
-      );
-      const countRow = await get('SELECT COUNT(*) AS totalProducts FROM products');
-      const totalProducts = countRow?.totalProducts || 0;
+      const paginatedProducts = await ProductRepository.findPaginated(startIndex, safeLimit);
+      const totalProducts = await ProductRepository.getTotal();
       const totalPages = Math.ceil(totalProducts / safeLimit);
 
       return {
         data: paginatedProducts,
         pagination: {
           currentPage: safePage,
+          pageSize: safeLimit,
+          totalItems: totalProducts,
+          totalPages,
+          hasNextPage: safePage < totalPages,
+          hasPrevPage: safePage > 1,
+        },
+      };
+    } catch (error) {
+      console.error('Error fetching paginated products:', error.message);
+      throw new Error('Failed to fetch paginated products');
+    }
+  }
+}
+
+module.exports = ProductService;
           totalPages,
           totalProducts,
           itemsPerPage: safeLimit,
