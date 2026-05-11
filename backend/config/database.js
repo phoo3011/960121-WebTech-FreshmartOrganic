@@ -3,7 +3,7 @@ const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 const config = require('./config');
 
-const databasePath = path.join(__dirname, '../../store.db');
+const databasePath = path.resolve(config.DB_PATH);
 
 const db = new sqlite3.Database(databasePath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (error) => {
   if (error) {
@@ -56,6 +56,7 @@ const ensureSchema = async () => {
         product_id INTEGER NOT NULL,
         quantity INTEGER NOT NULL,
         total_price REAL NOT NULL,
+        idempotency_key TEXT UNIQUE,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     `
@@ -70,10 +71,45 @@ const ensureSchema = async () => {
         price REAL NOT NULL,
         image TEXT NOT NULL,
         status TEXT,
-        discount TEXT
+        discount TEXT,
+        stock INTEGER DEFAULT 0
       )
     `
   );
+
+  // If products table exists without 'stock' column, add it
+  try {
+    const cols = await get("PRAGMA table_info('products')");
+    // PRAGMA returns multiple rows; check presence via all query
+    const info = await all("PRAGMA table_info('products')");
+    const hasStock = info.some(c => c.name === 'stock');
+    if (!hasStock) {
+      await run('ALTER TABLE products ADD COLUMN stock INTEGER DEFAULT 0');
+    }
+  } catch (err) {
+    // Non-fatal migration step
+    console.warn('Product stock column migration check failed:', err.message);
+  }
+
+  // If orders table exists without 'idempotency_key' column, add it
+  try {
+    const ordersInfo = await all("PRAGMA table_info('orders')");
+    const hasIdempotency = ordersInfo.some(c => c.name === 'idempotency_key');
+    if (!hasIdempotency) {
+      await run('ALTER TABLE orders ADD COLUMN idempotency_key TEXT');
+      // add an index for quick lookups
+      await run('CREATE INDEX IF NOT EXISTS idx_orders_idempotency_key ON orders(idempotency_key)');
+    }
+  } catch (err) {
+    console.warn('Orders idempotency migration check failed:', err.message);
+  }
+
+  // Ensure existing products have a sensible default stock to avoid accidental 'insufficient stock' immediately after migration
+  try {
+    await run('UPDATE products SET stock = 100 WHERE stock IS NULL OR stock < 1');
+  } catch (err) {
+    console.warn('Failed to set default product stock:', err.message);
+  }
 
   await run(
     `

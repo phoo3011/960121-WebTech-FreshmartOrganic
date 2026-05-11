@@ -15,9 +15,9 @@ const app = express();
 
 // ==================== MIDDLEWARE ====================
 
-// Body parser middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Body parser middleware with size limits
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // CORS middleware
 app.use((req, res, next) => {

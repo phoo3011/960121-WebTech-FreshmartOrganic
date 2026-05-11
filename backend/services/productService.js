@@ -98,16 +98,3 @@ class ProductService {
 }
 
 module.exports = ProductService;
-          totalPages,
-          totalProducts,
-          itemsPerPage: safeLimit,
-        },
-      };
-    } catch (error) {
-      console.error('Error fetching paginated products:', error.message);
-      throw new Error('Failed to fetch products');
-    }
-  }
-}
-
-module.exports = ProductService;

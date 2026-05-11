@@ -6,6 +6,8 @@
 const express = require('express');
 const AuthController = require('../controllers/authController');
 const RegisterService = require('../services/register');
+const { validateBody, Joi } = require('../middleware/validate');
+const { authLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -29,6 +31,12 @@ router.post('/register', async (req, res) => {
 	}
 });
 
-router.post('/login', AuthController.login);
+const loginSchema = Joi.object({
+	email: Joi.string().email().allow('', null),
+	username: Joi.string().allow('', null),
+	password: Joi.string().min(6).required(),
+}).or('email', 'username');
+
+router.post('/login', authLimiter, validateBody(loginSchema), AuthController.login);
 
 module.exports = router;

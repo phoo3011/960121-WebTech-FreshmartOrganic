@@ -2,22 +2,37 @@ const express = require('express');
 const router = express.Router();
 
 const OrderService = require('../services/orderService');
+const ProductService = require('../services/productService');
+const auth = require('../middleware/auth');
+const { validateBody, Joi } = require('../middleware/validate');
+const { checkoutLimiter } = require('../middleware/rateLimit');
 
 /**
  * POST /api/checkout
  * Inserts an order into store.db using SQLite.
  */
-router.post('/checkout', async (req, res) => {
+const checkoutSchema = Joi.object({
+    product_id: Joi.number().integer().positive().required(),
+    productId: Joi.number().integer().positive(),
+    quantity: Joi.number().integer().positive().required(),
+});
+
+router.post('/checkout', checkoutLimiter, auth, validateBody(checkoutSchema), async (req, res) => {
     try {
-        const userId = Number(req.body.user_id ?? req.body.userId);
+        // userId comes from auth middleware
+        const userId = Number(req.user && req.user.id);
         const productId = Number(req.body.product_id ?? req.body.productId);
         const quantity = Number(req.body.quantity);
-        const totalPrice = Number(req.body.total_price ?? req.body.totalPrice);
+        const idempotencyKey = req.header('Idempotency-Key') || null;
+
+        // Server-side compute of totalPrice
+        const product = await ProductService.getProductById(productId);
+        const totalPrice = product ? Number((product.price * quantity).toFixed(2)) : NaN;
 
         const errors = {};
 
         if (!Number.isInteger(userId) || userId <= 0) {
-            errors.user_id = 'user_id must be a positive integer.';
+            errors.user_id = 'authenticated user required.';
         }
 
         if (!Number.isInteger(productId) || productId <= 0) {
@@ -45,6 +60,7 @@ router.post('/checkout', async (req, res) => {
             productId,
             quantity,
             totalPrice,
+            idempotencyKey,
         });
 
         return res.status(201).json({

@@ -3,6 +3,9 @@
  */
 
 const path = require('path');
+const dotenv = require('dotenv');
+
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 module.exports = {
   // Server configuration
@@ -22,4 +25,7 @@ module.exports = {
 
   // Authentication
   JWT_SECRET: process.env.JWT_SECRET || 'freshmart-dev-secret',
+
+  // Database configuration
+  DB_PATH: process.env.DB_PATH || path.join(__dirname, '../../store.db'),
 };

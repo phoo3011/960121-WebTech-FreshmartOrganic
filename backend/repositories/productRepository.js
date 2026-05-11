@@ -15,7 +15,7 @@ class ProductRepository {
     try {
       await dbReady;
       return all(
-        'SELECT id, name, category, price, image, status, discount FROM products ORDER BY id ASC'
+        'SELECT id, name, category, price, image, status, discount, COALESCE(stock, 0) AS stock FROM products ORDER BY id ASC'
       );
     } catch (error) {
       console.error('[ProductRepository] Error finding all products:', error.message);
@@ -32,7 +32,7 @@ class ProductRepository {
     try {
       await dbReady;
       return get(
-        'SELECT id, name, category, price, image, status, discount FROM products WHERE id = ?',
+        'SELECT id, name, category, price, image, status, discount, COALESCE(stock, 0) AS stock FROM products WHERE id = ?',
         [Number(productId)]
       );
     } catch (error) {
@@ -50,7 +50,7 @@ class ProductRepository {
     try {
       await dbReady;
       return all(
-        'SELECT id, name, category, price, image, status, discount FROM products WHERE LOWER(category) = LOWER(?) ORDER BY id ASC',
+        'SELECT id, name, category, price, image, status, discount, COALESCE(stock, 0) AS stock FROM products WHERE LOWER(category) = LOWER(?) ORDER BY id ASC',
         [category]
       );
     } catch (error) {
@@ -69,7 +69,7 @@ class ProductRepository {
       await dbReady;
       const term = `%${String(searchTerm).trim().toLowerCase()}%`;
       return all(
-        'SELECT id, name, category, price, image, status, discount FROM products WHERE LOWER(name) LIKE ? OR LOWER(category) LIKE ? ORDER BY id ASC',
+        'SELECT id, name, category, price, image, status, discount, COALESCE(stock, 0) AS stock FROM products WHERE LOWER(name) LIKE ? OR LOWER(category) LIKE ? ORDER BY id ASC',
         [term, term]
       );
     } catch (error) {
@@ -88,7 +88,7 @@ class ProductRepository {
     try {
       await dbReady;
       return all(
-        'SELECT id, name, category, price, image, status, discount FROM products ORDER BY id ASC LIMIT ? OFFSET ?',
+        'SELECT id, name, category, price, image, status, discount, COALESCE(stock, 0) AS stock FROM products ORDER BY id ASC LIMIT ? OFFSET ?',
         [limit, offset]
       );
     } catch (error) {
@@ -126,7 +126,7 @@ class ProductRepository {
       await dbReady;
       const placeholders = productIds.map(() => '?').join(',');
       return all(
-        `SELECT id, name, category, price, image, status, discount FROM products WHERE id IN (${placeholders}) ORDER BY id ASC`,
+        `SELECT id, name, category, price, image, status, discount, COALESCE(stock, 0) AS stock FROM products WHERE id IN (${placeholders}) ORDER BY id ASC`,
         productIds
       );
     } catch (error) {

@@ -14,26 +14,52 @@ class OrderRepository {
    */
   static async create(orderData) {
     try {
-      const { userId, productId, quantity, totalPrice } = orderData;
+      const { userId, productId, quantity, totalPrice, idempotencyKey } = orderData;
 
-      if (!userId || !productId || quantity === undefined || !totalPrice) {
+      if (!userId || !productId || quantity === undefined || totalPrice === undefined) {
         throw new Error('Missing required order fields: userId, productId, quantity, totalPrice');
       }
 
       await dbReady;
 
-      const result = await run(
-        'INSERT INTO orders (user_id, product_id, quantity, total_price) VALUES (?, ?, ?, ?)',
-        [userId, productId, quantity, totalPrice]
-      );
+      // Idempotency: if client provides an idempotency key, return existing order
+      if (idempotencyKey) {
+        const existing = await get('SELECT id, user_id AS userId, product_id AS productId, quantity, total_price AS totalPrice FROM orders WHERE idempotency_key = ?', [idempotencyKey]);
+        if (existing) {
+          return existing;
+        }
+      }
 
-      return {
-        id: result.lastID,
-        userId,
-        productId,
-        quantity,
-        totalPrice,
-      };
+      // Begin transaction
+      await run('BEGIN TRANSACTION');
+      try {
+        // Check product and stock
+        const product = await get('SELECT id, price, COALESCE(stock, 0) AS stock FROM products WHERE id = ?', [productId]);
+        if (!product) throw new Error('Product not found');
+        if (product.stock < quantity) throw new Error('Insufficient stock');
+
+        // Decrement stock
+        await run('UPDATE products SET stock = stock - ? WHERE id = ?', [quantity, productId]);
+
+        // Insert order with optional idempotency key
+        const result = await run(
+          'INSERT INTO orders (user_id, product_id, quantity, total_price, idempotency_key) VALUES (?, ?, ?, ?, ?)',
+          [userId, productId, quantity, totalPrice, idempotencyKey || null]
+        );
+
+        await run('COMMIT');
+
+        return {
+          id: result.lastID,
+          userId,
+          productId,
+          quantity,
+          totalPrice,
+        };
+      } catch (err) {
+        await run('ROLLBACK');
+        throw err;
+      }
     } catch (error) {
       console.error('[OrderRepository] Error creating order:', error.message);
       throw new Error('Failed to create order in database');

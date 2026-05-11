@@ -29,7 +29,7 @@ class AuthController {
       }
 
       const token = AuthService.signToken(
-        { email: user.username, firstName: user.firstName },
+        { id: user.id, email: user.username, firstName: user.firstName },
         config.JWT_SECRET,
         60 * 60
       );
