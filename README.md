@@ -1,6 +1,6 @@
-# FreshMart Organic
+# Freshmart Organic
 
-FreshMart Organic is a full-stack e-commerce project built with Express, SQLite, and a static HTML/CSS/JavaScript frontend. The backend is organized around a clear separation of concerns so the application is easier to maintain, test, and extend.
+Freshmart Organic is a full-stack e-commerce project built with Express, SQLite, and a static HTML/CSS/JavaScript frontend. The backend is organized around a clear separation of concerns so the application is easier to maintain, test, and extend.
 
 ## Architecture Summary
 
@@ -22,7 +22,7 @@ This structure keeps HTTP concerns, business rules, and persistence logic separa
 ## Project Structure
 
 ```text
-960121-WebTech-FreshmartOrganic/
+freshmart-organic/
 ├── backend/
 │   ├── server.js
 │   ├── config/
